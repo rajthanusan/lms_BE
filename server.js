@@ -17,10 +17,10 @@ app.use(bodyParser.json());
 
 // MySQL database connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "leavetwo",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD || "",  // Default to an empty string if no password is provided
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
@@ -594,7 +594,6 @@ app.get('/api/LeaveApply/', (req, res) => {
       });
   });
 });
-
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
@@ -602,15 +601,15 @@ const generateResetToken = () => {
 const sendEmail = async (to, subject, text) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: process.env.EMAIL_SERVICE,  // Fetch service from env
       auth: {
-        user: 'rajthanusan08@gmail.com',
-        pass: 'gjfi fuas wekw lmwd'
+        user: process.env.EMAIL_USER,      // Fetch email user from env
+        pass: process.env.EMAIL_PASS       // Fetch email password from env
       }
     });
 
     const mailOptions = {
-      from: 'your-email@gmail.com',
+      from: process.env.EMAIL_FROM,        // Fetch sender email from env
       to,
       subject,
       text
@@ -764,7 +763,7 @@ The Leave Management System Team`;
 
 
 
-const port = 8085;
+const port = process.env.PORT || 8085;  // Use the PORT from the environment or default to 8085 locally
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
