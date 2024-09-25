@@ -199,7 +199,7 @@ app.get("/api/users", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).send("Failed to fetch users");
+      return res.status(500).send("Error : Failed to fetch users");
     }
     res.status(200).send(results);
   });
