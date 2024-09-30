@@ -488,7 +488,7 @@ app.get('/api/Leavetype/:id', (req, res) => {
 });
 
 app.get('/api/AllDepartment', (req, res) => {
-  const sql = 'SELECT * FROM Department'; // Retrieve distinct departments
+  const sql = 'SELECT * FROM department'; // Retrieve distinct departments
   db.query(sql, (err, results) => {
       if (err) {
           return res.status(500).send(err);
@@ -508,7 +508,7 @@ app.get('/api/Department', (req, res) => {
 
 /// Get all departments
 app.get('/api/Department', (req, res) => {
-  const sql = 'SELECT * FROM Department'; // Adjusted to select from the correct table
+  const sql = 'SELECT * FROM department'; // Adjusted to select from the correct table
   db.query(sql, (err, results) => {
       if (err) {
           console.error("Error fetching departments:", err);
@@ -520,7 +520,7 @@ app.get('/api/Department', (req, res) => {
 
 // Get department by ID
 app.get('/api/Department/:id', (req, res) => {
-  const sql = 'SELECT * FROM Department WHERE id = ?'; // Adjusted to select from the correct table
+  const sql = 'SELECT * FROM department WHERE id = ?'; // Adjusted to select from the correct table
   db.query(sql, [req.params.id], (err, result) => {
       if (err) {
           console.error("Error fetching department by ID:", err);
@@ -544,7 +544,7 @@ app.post('/api/Department', async (req, res) => {
 
   try {
       // Insert department into the database
-      const sql = 'INSERT INTO Department (department_name, location) VALUES (?, ?)';
+      const sql = 'INSERT INTO department (department_name, location) VALUES (?, ?)';
       db.query(sql, [department_name, location], (err, result) => {
           if (err) {
               console.error("Department creation failed:", err);
@@ -567,7 +567,7 @@ app.put('/api/Department/:id', (req, res) => {
       return res.status(400).send("All fields are required");
   }
 
-  const sql = 'UPDATE Department SET department_name = ?, location = ? WHERE id = ?'; // Adjusted to update the correct table and fields
+  const sql = 'UPDATE department SET department_name = ?, location = ? WHERE id = ?'; // Adjusted to update the correct table and fields
   db.query(sql, [department_name, location, req.params.id], (err, result) => {
       if (err) {
           console.error("Error updating department:", err);
@@ -582,7 +582,7 @@ app.put('/api/Department/:id', (req, res) => {
 
 // Delete a department by ID
 app.delete('/api/Department/:id', (req, res) => {
-  const sql = 'DELETE FROM Department WHERE id = ?'; // Adjusted to delete from the correct table
+  const sql = 'DELETE FROM department WHERE id = ?'; // Adjusted to delete from the correct table
   db.query(sql, [req.params.id], (err, result) => {
       if (err) {
           console.error("Error deleting department:", err);
