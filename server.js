@@ -534,7 +534,7 @@ app.get('/api/Department/:id', (req, res) => {
 });
 
 // Create a new department
-app.post('/api/Department', async (req, res) => {
+app.post('/api/department', async (req, res) => {
   const { department_name, location } = req.body;
 
   // Validate required fields
@@ -559,7 +559,7 @@ app.post('/api/Department', async (req, res) => {
 });
 
 // Update a department by ID
-app.put('/api/Department/:id', (req, res) => {
+app.put('/api/department/:id', (req, res) => {
   const { department_name, location } = req.body; // Removed manager_email and manager_password
 
   // Validate required fields
