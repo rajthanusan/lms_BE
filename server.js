@@ -692,7 +692,7 @@ const sendEmail = async (to, subject, text) => {
     });
 
     const mailOptions = {
-      from: "rajthanusan08@gmail.com",        // Fetch sender email from env
+      from: "thanusanraj49@gmail.com",        // Fetch sender email from env
       to,
       subject,
       text
@@ -723,11 +723,13 @@ app.post('/api/request-password-reset', (req, res) => {
       try {
         await sendEmail(email, 'Password Reset Request - Leave Management System',`Dear User,
 
-        We have received a request to reset your password for your Leave Management System account. 
+        We have received a request to reset your password for your Leave Management System account.
+
+        Your password reset code is: ${code}.
         
-        Your password reset code is: ${code}
+        You can use the following link to log in with your updated password: Login to Leave Management System using this url : https://lms-model.netlify.app/login.
         
-        If you did not request a password reset, please ignore this email or contact support if you have concerns.
+        If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
         
         Thank you,
         Leave Management System Team
@@ -822,11 +824,11 @@ app.put('/api/LeaveApply/:id/:action', (req, res) => {
               const subject = `Leave Request ${action.charAt(0).toUpperCase() + action.slice(1)}`;
               const text = `Dear User,
 
-We wanted to inform you that the status of your leave request has been updated. 
+              We would like to inform you that the status of your leave request has been updated.
 
-Your leave request has been ${action}. 
-
-If you have any questions or need further assistance, please do not hesitate to contact us.
+              Your leave request has been ${action}. You can check the status by using the following link: Login to Leave Management System at https://lms-model.netlify.app/myleave.
+              
+              If you have any questions or need further assistance, please do not hesitate to contact us.
 
 Thank you,
 The Leave Management System Team`;
