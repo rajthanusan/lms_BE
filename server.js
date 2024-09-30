@@ -682,15 +682,15 @@ const generateResetToken = () => {
 const sendEmail = async (to, subject, text) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE,  // Fetch service from env
+      service: "Gmail",  // Fetch service from env
       auth: {
-        user: process.env.EMAIL_USER,      // Fetch email user from env
-        pass: process.env.EMAIL_PASS       // Fetch email password from env
+        user: "rajthanusan08@gmail.com",      // Fetch email user from env
+        pass: "gjfi fuas wekw lmwd"       // Fetch email password from env
       }
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM,        // Fetch sender email from env
+      from: "rajthanusan08@gmail.com",        // Fetch sender email from env
       to,
       subject,
       text
