@@ -43,10 +43,10 @@ const comparePassword = async (password, hashedPassword) => {
 };
 
 app.post("/api/employeeregister", async (req, res) => {
-  const { username, password, name, department, contact, birthday, joindate } = req.body;
+  const { username, password, name, department, handphone, birthday, joindate } = req.body;
 
   // Validate required fields
-  if (!username || !password || !name || !contact) {
+  if (!username || !password || !name || !handphone) {
     return res.status(400).send("Username, password, name, and contact are required");
   }
 
@@ -59,14 +59,14 @@ app.post("/api/employeeregister", async (req, res) => {
 
     // Insert user into the database with the role 'employee'
     db.query(
-      "INSERT INTO users (username, password, role, name, department, contact, birthday, joindate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users (username, password, role, name, department, handphone, birthday, joindate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         username,
         hashedPassword,
         role,                 // Always set as 'employee'
         name,
         department || null,    // Use NULL if department is not provided
-        contact,
+        handphone || null,
         birthday || null,      // Use NULL if birthday is not provided
         joindate || null       // Use NULL if joindate is not provided
       ],
@@ -84,35 +84,6 @@ app.post("/api/employeeregister", async (req, res) => {
   }
 });
 
-app.post("/api/Managerinsert", async (req, res) => {
-  const { username, password, department, name, contact } = req.body;
-
-  // Check if all required fields are provided
-  if (!username || !password || !department || !name) {
-    return res.status(400).send("All required fields must be provided");
-  }
-
-  try {
-    // Hash the password
-    const hashedPassword = await encryptPassword(password);
-
-    // Insert manager into the database
-    db.query(
-      "INSERT INTO manager (username, password, department, name, contact) VALUES (?, ?, ?, ?, ?)",
-      [username, hashedPassword, department, name, contact || null],
-      (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).send("Failed to register manager");
-        }
-        res.status(201).send({ message: "Manager registered successfully" });
-      }
-    );
-  } catch (error) {
-    console.error("Error during password encryption:", error);
-    res.status(500).send("Server error");
-  }
-});
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
@@ -166,35 +137,56 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.post("/api/users", async (req, res) => {
-  const { username, password, role, name, department, contact } = req.body;
 
-  // Check if all required fields are provided
-  if (!username || !password || !role || !name) {
-    return res.status(400).send("All required fields must be provided");
+app.post("/api/crmanager", async (req, res) => {
+  const { username, password, name, department, landline, handphone, birthday, joindate } = req.body;
+
+  // Validate required fields
+  if (!username || !password || !name || !handphone) {
+    return res.status(400).send("Username, password, name, and handphone are required");
   }
 
   try {
     // Hash the password
     const hashedPassword = await encryptPassword(password);
 
-    // Insert user into the database
+    // Set the role to 'manager'
+    const role = "manager";
+
+    // Insert user into the database with the role 'manager'
     db.query(
-      "INSERT INTO users (username, password, role, name, department, contact) VALUES (?, ?, ?, ?, ?, ?)",
-      [username, hashedPassword, role, name, department || null, contact || null],
+      "INSERT INTO users (username, password, role, name, department, landline, handphone, birthday, joindate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        username,
+        hashedPassword,
+        role,                  // Set as 'manager'
+        name,
+        department || null,    // Use NULL if department is not provided
+        landline || null,      // Insert landline (null if not provided)
+        handphone || null,     // Insert handphone (null if not provided)
+        birthday || null,      // Use NULL if birthday is not provided
+        joindate || null       // Use NULL if joindate is not provided
+      ],
       (err, result) => {
         if (err) {
-          console.error("Database error:", err);
-          return res.status(500).send("Failed to register user");
+          console.error("Registration failed:", err);
+          // Check for specific database errors if needed
+          if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).send("Username already exists");
+          }
+          return res.status(500).send("Registration failed");
         }
-        res.status(201).send({ message: "User registered successfully" });
+        // Successfully created manager
+        return res.status(201).send({ message: "Manager has been added successfully" });
       }
     );
   } catch (error) {
-    console.error("Error during password encryption:", error);
-    res.status(500).send("Server error");
+    console.error("Error hashing password:", error);
+    return res.status(500).send("Server error");
   }
 });
+
+
 app.get("/api/users", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {
     if (err) {
@@ -237,7 +229,7 @@ app.get('/api/LeaveView/', (req, res) => {
 // Route to get leave types
 
 app.get('/api/Manager', (req, res) => {
-  const sql = 'SELECT * FROM manager'; // Adjust based on your table name
+  const sql = 'SELECT * FROM users where role="manager"'; // Adjust based on your table name
   db.query(sql, (err, result) => {
     if (err) return res.status(500).json({ error: err });
     res.json(result);
@@ -246,27 +238,76 @@ app.get('/api/Manager', (req, res) => {
 
 app.get('/api/Manager/:id', (req, res) => {
   const { id } = req.params;
-  const sql = 'SELECT * FROM manager WHERE id = ?';
+  const sql = 'SELECT * FROM users WHERE id = ?';
   db.query(sql, [id], (err, result) => {
     if (err) return res.status(500).json({ error: err });
     res.json(result[0]);
   });
 });
 
-app.put('/api/Manager/:id', (req, res) => {
+app.put('/api/Manager/:id', async (req, res) => {
   const { id } = req.params;
-  const { username, password, name, contact, department } = req.body;
-  const sql = 'UPDATE manager SET username = ?, password = ?, name = ?, contact = ?, department = ? WHERE id = ?';
-  db.query(sql, [username, password, name, contact, department, id], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ message: 'Manager updated successfully' });
-  });
+  const { username, password, name, department, landline, handphone, birthday, joindate } = req.body;
+
+  // Validate required fields
+  if (!username || !name || !handphone) {
+    return res.status(400).send("Username, name, and handphone are required");
+  }
+
+  try {
+    // Hash the new password if provided
+    const hashedPassword = password ? await encryptPassword(password) : undefined;
+
+    // Prepare the SQL update query
+    const sql = `
+      UPDATE users 
+      SET 
+        username = ?, 
+        ${hashedPassword ? "password = ?," : ""}
+        name = ?, 
+        department = ?, 
+        landline = ?, 
+        handphone = ?, 
+        birthday = ?, 
+        joindate = ?
+      WHERE id = ?
+    `;
+
+    // Prepare the parameters for the query
+    const params = [
+      username,
+      ...(hashedPassword ? [hashedPassword] : []), // Only add hashedPassword if it exists
+      name,
+      department || null,
+      landline || null,
+      handphone || null,
+      birthday || null,
+      joindate || null,
+      id,
+    ].filter(param => param !== undefined); // Filter out any undefined parameters
+
+    // Execute the update query
+    db.query(sql, params, (err, result) => {
+      if (err) {
+        console.error("Update failed:", err);
+        return res.status(500).send("Update failed");
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).send("Manager not found");
+      }
+      return res.status(200).send({ message: "Manager updated successfully" });
+    });
+  } catch (error) {
+    console.error("Error hashing password:", error);
+    return res.status(500).send("Server error");
+  }
 });
+
 
 // Delete a manager
 app.delete('/api/Manager/:id', (req, res) => {
   const { id } = req.params;
-  const sql = 'DELETE FROM manager WHERE id = ?';
+  const sql = 'DELETE FROM users WHERE id = ?';
   db.query(sql, [id], (err, result) => {
     if (err) return res.status(500).json({ error: err });
     res.json({ message: 'Manager deleted successfully' });
@@ -324,7 +365,7 @@ app.delete('/api/User/delete/:id', (req, res) => {
   const { id } = req.params;
 
   db.query(
-      'DELETE FROM employee WHERE id = ?',
+      'DELETE FROM users WHERE id = ?',
       [id],
       (err, result) => {
           if (err) {
@@ -437,87 +478,126 @@ app.delete('/api/Leavetype/:id', (req, res) => {
   });
 });
 
-
+app.get('/api/Leavetype/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM leave_types WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(result[0]);
+  });
+});
 
 app.get('/api/AllDepartment', (req, res) => {
-  const sql = 'SELECT DISTINCT department FROM manager'; // Retrieve distinct departments
+  const sql = 'SELECT * FROM Department'; // Retrieve distinct departments
   db.query(sql, (err, results) => {
       if (err) {
           return res.status(500).send(err);
       }
-      res.json(results.map(row => row.department)); // Send department names
+      res.json(results.map(row => row.department_name)); // Send department names
   });
 });
 
-
+/*
 app.get('/api/Department', (req, res) => {
     const sql = 'SELECT * FROM manager';
     db.query(sql, (err, results) => {
         if (err) throw err;
         res.json(results);
     });
+});*/
+
+/// Get all departments
+app.get('/api/Department', (req, res) => {
+  const sql = 'SELECT * FROM Department'; // Adjusted to select from the correct table
+  db.query(sql, (err, results) => {
+      if (err) {
+          console.error("Error fetching departments:", err);
+          return res.status(500).send("Error fetching departments");
+      }
+      res.json(results);
+  });
 });
 
 // Get department by ID
 app.get('/api/Department/:id', (req, res) => {
-    const sql = 'SELECT * FROM manager WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json(result[0]);
-    });
+  const sql = 'SELECT * FROM Department WHERE id = ?'; // Adjusted to select from the correct table
+  db.query(sql, [req.params.id], (err, result) => {
+      if (err) {
+          console.error("Error fetching department by ID:", err);
+          return res.status(500).send("Error fetching department");
+      }
+      if (result.length === 0) {
+          return res.status(404).send("Department not found");
+      }
+      res.json(result[0]);
+  });
 });
 
 // Create a new department
 app.post('/api/Department', async (req, res) => {
-    const { department_name, manager_email, manager_password } = req.body;
+  const { department_name, location } = req.body;
 
-    // Validate required fields
-    if (!department_name || !manager_email || !manager_password) {
-        return res.status(400).send("All fields are required");
-    }
+  // Validate required fields
+  if (!department_name || !location) {
+      return res.status(400).send("All fields are required");
+  }
 
-    try {
-        // Hash the manager's password
-        const hashedPassword = await encryptPassword(manager_password);
-
-        // Insert department into the database
-        const sql = 'INSERT INTO manager (department_name, manager_email, manager_password) VALUES (?, ?, ?)';
-        db.query(sql, [department_name, manager_email, hashedPassword], (err, result) => {
-            if (err) {
-                console.error("Department creation failed:", err);
-                return res.status(500).send("Department creation failed");
-            }
-            res.status(201).json({ id: result.insertId, department_name, manager_email });
-        });
-    } catch (error) {
-        console.error("Error hashing password:", error);
-        res.status(500).send("Server error");
-    }
+  try {
+      // Insert department into the database
+      const sql = 'INSERT INTO Department (department_name, location) VALUES (?, ?)';
+      db.query(sql, [department_name, location], (err, result) => {
+          if (err) {
+              console.error("Department creation failed:", err);
+              return res.status(500).send("Department creation failed");
+          }
+          res.status(201).json({ id: result.insertId, department_name, location });
+      });
+  } catch (error) {
+      console.error("Server error:", error);
+      res.status(500).send("Server error");
+  }
 });
 
 // Update a department by ID
 app.put('/api/Department/:id', (req, res) => {
-    const { department_name, manager_email, manager_password } = req.body;
-    const sql = 'UPDATE departments SET department_name = ?, manager_email = ?, manager_password = ? WHERE id = ?';
-    db.query(sql, [department_name, manager_email, manager_password, req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Department updated successfully' });
-    });
+  const { department_name, location } = req.body; // Removed manager_email and manager_password
+
+  // Validate required fields
+  if (!department_name || !location) {
+      return res.status(400).send("All fields are required");
+  }
+
+  const sql = 'UPDATE Department SET department_name = ?, location = ? WHERE id = ?'; // Adjusted to update the correct table and fields
+  db.query(sql, [department_name, location, req.params.id], (err, result) => {
+      if (err) {
+          console.error("Error updating department:", err);
+          return res.status(500).send("Error updating department");
+      }
+      if (result.affectedRows === 0) {
+          return res.status(404).send("Department not found");
+      }
+      res.json({ message: 'Department updated successfully' });
+  });
 });
 
 // Delete a department by ID
 app.delete('/api/Department/:id', (req, res) => {
-    const sql = 'DELETE FROM departments WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Department deleted successfully' });
-    });
+  const sql = 'DELETE FROM Department WHERE id = ?'; // Adjusted to delete from the correct table
+  db.query(sql, [req.params.id], (err, result) => {
+      if (err) {
+          console.error("Error deleting department:", err);
+          return res.status(500).send("Error deleting department");
+      }
+      if (result.affectedRows === 0) {
+          return res.status(404).send("Department not found");
+      }
+      res.json({ message: 'Department deleted successfully' });
+  });
 });
-
 
 app.get('/find-department', (req, res) => {
   const username = req.query.username;
-  const sql = 'SELECT department FROM manager WHERE username = ?';
+  const sql = 'SELECT department FROM users WHERE username = ?';
   
   db.query(sql, [username], (err, results) => {
     if (err) {
@@ -539,7 +619,7 @@ app.get('/api/User', (req, res) => {
     return res.status(400).json({ error: 'Department not provided' });
   }
 
-  db.query('SELECT * FROM employee WHERE department = ?', [department], (err, result) => {
+  db.query('SELECT * FROM users WHERE department = ? and role="employee" ', [department], (err, result) => {
       if (err) {
           console.error('Failed to load employees:', err);
           return res.status(500).json({ error: 'Failed to load employees' });
@@ -561,7 +641,7 @@ app.get('/api/LeaveApply/', (req, res) => {
   }
 
   // First, get all employees from the specified department
-  db.query('SELECT username FROM employee WHERE department = ?', [department], (err, employeeResult) => {
+  db.query('SELECT username FROM users WHERE department = ?', [department], (err, employeeResult) => {
       if (err) {
           console.error('Failed to load employees:', err);
           return res.status(500).json({ error: 'Failed to load employees' });
@@ -594,6 +674,7 @@ app.get('/api/LeaveApply/', (req, res) => {
       });
   });
 });
+
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
@@ -628,7 +709,7 @@ app.post('/api/request-password-reset', (req, res) => {
   const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
   // Update query
-  const query = 'UPDATE employee SET reset_code = ?, reset_code_expiry = ? WHERE username = ?';
+  const query = 'UPDATE users SET reset_code = ?, reset_code_expiry = ? WHERE username = ?';
 
   db.query(query, [code, expiry, email], async (error, results) => {
     if (error) {
@@ -666,7 +747,7 @@ app.post('/api/request-password-reset', (req, res) => {
 app.post('/api/verify-code', (req, res) => {
   const { email, code } = req.body;
 
-  db.query('SELECT * FROM employee WHERE username = ? AND reset_code = ? AND reset_code_expiry > NOW()', [email, code], (err, results) => {
+  db.query('SELECT * FROM users WHERE username = ? AND reset_code = ? AND reset_code_expiry > NOW()', [email, code], (err, results) => {
     if (err) return res.status(500).json({ success: false, message: 'Database error' });
 
     if (results.length > 0) {
@@ -682,7 +763,7 @@ app.post('/api/reset-password', async (req, res) => {
   try {
     const hashedPassword = await encryptPassword(newPassword);
 
-    db.query('UPDATE employee SET password = ?, reset_code = NULL, reset_code_expiry = NULL WHERE username = ?', [hashedPassword, email], (err, results) => {
+    db.query('UPDATE users SET password = ?, reset_code = NULL, reset_code_expiry = NULL WHERE username = ?', [hashedPassword, email], (err, results) => {
       if (err) return res.status(500).json({ success: false, message: 'Database error' });
 
       if (results.affectedRows > 0) {
@@ -725,7 +806,7 @@ app.put('/api/LeaveApply/:id/:action', (req, res) => {
 
           // If the update was successful, execute the second query
           // Second query: Fetch the user's email
-          db.query('SELECT username AS email FROM employee WHERE username = (SELECT username FROM leave_applications WHERE id = ?)', [id], async (error, results) => {
+          db.query('SELECT username AS email FROM users WHERE username = (SELECT username FROM leave_applications WHERE id = ?)', [id], async (error, results) => {
               if (error) {
                   console.error('Error fetching email:', error); // Log error for debugging
                   return res.status(500).json({ error: 'Error fetching email' });
