@@ -909,19 +909,16 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
           const employeeEmail = results[0].email; // Assuming username is the email
           const subject = `Leave Request ${action.charAt(0).toUpperCase() + action.slice(1)}`;
 
-          const text = `Dear User,
+          const text = `<p>Dear User,</p>
 
-          We would like to inform you that the status of your leave request has been updated.
+          <p>We would like to inform you that the status of your leave request has been updated.</p>
           
-          Your leave request has been APPROVED. You can check the status by using the following link: https://lms-model.netlify.app/myleave.
+          <p>Your leave request has been <strong>APPROVED</strong>. You can check the status by using the following link: <a href="https://lms-model.netlify.app/myleave">https://lms-model.netlify.app/myleave</a>.</p>
           
-          If you have any questions or need further assistance, please do not hesitate to contact us.
+          <p>If you have any questions or need further assistance, please do not hesitate to contact us.</p>
           
-          Thank you,  
-          The Leave Management System Team`;
+          <p>Thank you,<br>The Leave Management System Team</p>`;
           
-
-
 
           
 
