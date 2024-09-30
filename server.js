@@ -207,12 +207,14 @@ app.post("/api/Leaveapply", (req, res) => {
     [leave, startdate, enddate, comments, username, status],
     (err, result) => {
       if (err) {
+        console.error("Database error:", err);  // Log the actual error
         return res.status(500).send("Error saving leave application");
       }
       res.status(201).send("Leave application saved successfully");
     }
   );
 });
+
 app.get('/api/LeaveView/', (req, res) => {
   db.query('SELECT * FROM leave_applications', (err, result) => {
       if (err) {
