@@ -911,14 +911,14 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
 
           const text = `Dear User,
 
-We would like to inform you that the status of your leave request has been updated.
+          We would like to inform you that the status of your leave request has been updated.
           
-Your leave request has been APPROVED. You can check the status by using the following link: https://lms-model.netlify.app/myleave.
+          Your leave request has been APPROVED. You can check the status by using the following link: https://lms-model.netlify.app/myleave.
           
-If you have any questions or need further assistance, please do not hesitate to contact us.
+          If you have any questions or need further assistance, please do not hesitate to contact us.
           
-Thank you,  
-The Leave Management System Team`;
+          Thank you,  
+          The Leave Management System Team`;
           
 
 
