@@ -787,22 +787,22 @@ app.post("/api/request-password-reset", (req, res) => {
       try {
         await sendEmail(
          email,
-         "Password Reset Request - Leave Management System",
-         `Dear User,
-         
-         We have received a request to reset your password for your Leave Management System account.
-         
-         Your password reset code is: **${code}**.
-         
-         You can use the following link to log in with your updated password:https://lms-model.netlify.app/login.
-         
-         If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
-         
-         Thank you,  
-         Leave Management System Team
-         
-         **Note:** This code will expire in 30 minutes.
-         `
+"Password Reset Request - Leave Management System",
+`Dear User,
+
+We have received a request to reset your password for your Leave Management System account.
+
+Your password reset code is: **${code}**.
+
+You can use the following link to log in with your updated password:https://lms-model.netlify.app/login.
+
+If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
+
+Thank you,  
+Leave Management System Team
+
+**Note:** This code will expire in 30 minutes.
+`
 
         );
         res.json({ success: true });
@@ -915,14 +915,14 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
           }`;
           const text = `Dear User,
 
-          We would like to inform you that the status of your leave request has been updated.
+We would like to inform you that the status of your leave request has been updated.
           
-          Your leave request has been ${action}. You can check the status by using the following link : https://lms-model.netlify.app/myleave.
+Your leave request has been ${action}. You can check the status by using the following link : https://lms-model.netlify.app/myleave.
           
-          If you have any questions or need further assistance, please do not hesitate to contact us.
+If you have any questions or need further assistance, please do not hesitate to contact us.
           
-          Thank you,  
-          The Leave Management System Team`;
+Thank you,  
+The Leave Management System Team`;
 
           // Send email
           try {
