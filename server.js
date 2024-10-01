@@ -69,7 +69,6 @@ const sendEmail = async (to, subject, text) => {
   }
 };
 
-
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -85,7 +84,7 @@ app.post("/api/employeeregister", async (req, res) => {
   if (!username || !password || !name || !handphone) {
     return res
       .status(400)
-      .send("Username, password, name, and contact are required");
+      .send("Username, password, name, and handphone are required");
   }
 
   try {
@@ -108,14 +107,28 @@ app.post("/api/employeeregister", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      (err, result) => {
+      async (err, result) => { // Use async to allow await within this block
         if (err) {
           console.error("Registration failed:", err);
           return res.status(500).send("Registration failed");
         }
-        res.status(201).send({ message: "Registration successful" });
-        const emailSubject = "Registration Successful - Leave Management System";
-        const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+
+        if (result.affectedRows > 0) {
+          // Prepare email content
+          const emailSubject = "Registration Successful - Leave Management System";
+          const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+
+          try {
+            // Send confirmation email
+            await sendEmail(username, emailSubject, emailText); // Send email to the registered user's email
+            return res.status(201).send({ message: "Registration successful" });
+          } catch (emailError) {
+            console.error("Error sending email:", emailError);
+            return res.status(500).json({ success: false, message: "Registration successful, but failed to send confirmation email" });
+          }
+        } else {
+          return res.status(404).json({ success: false, message: "Registration failed, no rows affected" });
+        }
       }
     );
   } catch (error) {
@@ -123,6 +136,7 @@ app.post("/api/employeeregister", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
