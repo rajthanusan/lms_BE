@@ -39,18 +39,18 @@ const comparePassword = async (password, hashedPassword) => {
   // Compare the password with the hashed password
   return await bcrypt.compare(password, hashedPassword);
 };
-
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString("hex");
 };
 
+// Function to send email
 const sendEmail = async (to, subject, text) => {
   try {
     const transporter = nodemailer.createTransport({
       service: "Gmail", // Fetch service from env
       auth: {
         user: "rajthanusan08@gmail.com", // Fetch email user from env
-        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
+        pass: "your-email-password", // Replace with your actual password or app password
       },
     });
 
@@ -83,7 +83,7 @@ app.post("/api/employeeregister", async (req, res) => {
   if (!username || !password || !name || !handphone) {
     return res
       .status(400)
-      .send("Username, password, name, and contact are required");
+      .send("Username, password, name, and handphone are required");
   }
 
   try {
@@ -113,18 +113,14 @@ app.post("/api/employeeregister", async (req, res) => {
         }
 
         // Send confirmation email
-        const mailOptions = {
-          from: 'thanusanraj49@gmail.com', // Sender's email
-          to: username, // Recipient's email (username is used as the email)
-          subject: 'Account Created Successfully - Leave managment',
-          text: `Hello ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nYou can log in to the system using this URL: https://lms-model.netlify.app/login\n\nThank you!\n\nRegards,\nLeave Management Team`,
-        };
+        const emailSubject = "Welcome to the Leave Management System";
+        const emailText = `Hello ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you!`;
 
         try {
-          await transporter.sendMail(mailOptions);
+          await sendEmail(username, emailSubject, emailText);
           res.status(201).send({ message: "Registration successful" });
         } catch (emailError) {
-          console.error("Error sending email:", emailError);
+          console.error("Failed to send confirmation email:", emailError);
           return res.status(500).send("Registration successful, but failed to send confirmation email");
         }
       }
@@ -241,7 +237,7 @@ app.post("/api/crmanager", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      async (err, result) => {
+      (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           // Check for specific database errors if needed
@@ -250,25 +246,10 @@ app.post("/api/crmanager", async (req, res) => {
           }
           return res.status(500).send("Registration failed");
         }
-
-        // Send confirmation email
-        const mailOptions = {
-          from: 'thanusanraj49@gmail.com', // Sender's email
-          to: username, // Assuming username is the email
-          subject: 'Manager Account Created Successfully - Leave Management System',
-          text: `Hello ${name},\n\nYour manager account has been created successfully!\n\nUsername: ${username}\n\nYou can log in to the system using this URL: https://lms-model.netlify.app/login\n\nThank you!\n\nRegards,\nLeave Management Team`,
-        };
-
-        try {
-          await transporter.sendMail(mailOptions);
-          // Successfully created manager
-          return res
-            .status(201)
-            .send({ message: "Manager has been added successfully" });
-        } catch (emailError) {
-          console.error("Error sending email:", emailError);
-          return res.status(500).send("Manager created, but failed to send confirmation email");
-        }
+        // Successfully created manager
+        return res
+          .status(201)
+          .send({ message: "Manager has been added successfully" });
       }
     );
   } catch (error) {
@@ -276,7 +257,6 @@ app.post("/api/crmanager", async (req, res) => {
     return res.status(500).send("Server error");
   }
 });
-
 
 app.get("/api/users", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {
