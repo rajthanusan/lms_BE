@@ -40,18 +40,23 @@ const comparePassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
 };
 
+
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
 const sendEmail = async (to, subject, text) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "Gmail",
+      service: "Gmail", // Fetch service from env
       auth: {
-        user: "rajthanusan08@gmail.com", // Replace with your actual email
-        pass: "gjfi fuas wekw lmwd", // Replace with your actual password or app password
+        user: "rajthanusan08@gmail.com", // Fetch email user from env
+        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
       },
     });
 
     const mailOptions = {
-      from: "thanusanraj49@gmail.com", // Replace with your sender email
+      from: "thanusanraj49@gmail.com", // Fetch sender email from env
       to,
       subject,
       text,
@@ -64,7 +69,7 @@ const sendEmail = async (to, subject, text) => {
   }
 };
 
-// Registration endpoint
+
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -80,7 +85,7 @@ app.post("/api/employeeregister", async (req, res) => {
   if (!username || !password || !name || !handphone) {
     return res
       .status(400)
-      .send("Username, password, name, and handphone are required");
+      .send("Username, password, name, and contact are required");
   }
 
   try {
@@ -103,13 +108,12 @@ app.post("/api/employeeregister", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      async (err, result) => {
+      (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           return res.status(500).send("Registration failed");
         }
-
-        // Send a registration success email
+        res.status(201).send({ message: "Registration successful" });
         const emailSubject = "Registration Successful - Leave Management System";
         const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
 
@@ -122,6 +126,12 @@ app.post("/api/employeeregister", async (req, res) => {
             .status(500)
             .json({ success: false, message: "Registration successful, but failed to send confirmation email" });
         }
+      }
+    );
+  } catch (error) {
+    console.error("Error hashing password:", error);
+    res.status(500).send("Server error");
+  };
       }
     );
   } catch (error) {
