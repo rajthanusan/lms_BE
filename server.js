@@ -40,6 +40,31 @@ const comparePassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
 };
 
+const sendEmail = async (to, subject, text) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: "rajthanusan08@gmail.com", // Replace with your actual email
+        pass: "gjfi fuas wekw lmwd", // Replace with your actual password or app password
+      },
+    });
+
+    const mailOptions = {
+      from: "thanusanraj49@gmail.com", // Replace with your sender email
+      to,
+      subject,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error; // Ensure errors are propagated
+  }
+};
+
+// Registration endpoint
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -55,7 +80,7 @@ app.post("/api/employeeregister", async (req, res) => {
   if (!username || !password || !name || !handphone) {
     return res
       .status(400)
-      .send("Username, password, name, and contact are required");
+      .send("Username, password, name, and handphone are required");
   }
 
   try {
@@ -78,12 +103,25 @@ app.post("/api/employeeregister", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           return res.status(500).send("Registration failed");
         }
-        res.status(201).send({ message: "Registration successful" });
+
+        // Send a registration success email
+        const emailSubject = "Registration Successful - Leave Management System";
+        const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+
+        try {
+          await sendEmail(username, emailSubject, emailText); // Send email to the registered user's email
+          res.status(201).send({ message: "Registration successful" });
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          return res
+            .status(500)
+            .json({ success: false, message: "Registration successful, but failed to send confirmation email" });
+        }
       }
     );
   } catch (error) {
@@ -737,34 +775,6 @@ app.get("/api/LeaveApply/", (req, res) => {
     }
   );
 });
-
-const generateResetToken = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-const sendEmail = async (to, subject, text) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "Gmail", // Fetch service from env
-      auth: {
-        user: "rajthanusan08@gmail.com", // Fetch email user from env
-        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
-      },
-    });
-
-    const mailOptions = {
-      from: "thanusanraj49@gmail.com", // Fetch sender email from env
-      to,
-      subject,
-      text,
-    };
-
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw error; // Ensure errors are propagated
-  }
-};
 
 app.post("/api/request-password-reset", (req, res) => {
   const { email } = req.body;
