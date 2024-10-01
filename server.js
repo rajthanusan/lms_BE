@@ -40,6 +40,34 @@ const comparePassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
 };
 
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+const sendEmail = async (to, subject, text) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "Gmail", // Fetch service from env
+      auth: {
+        user: "rajthanusan08@gmail.com", // Fetch email user from env
+        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
+      },
+    });
+
+    const mailOptions = {
+      from: "thanusanraj49@gmail.com", // Fetch sender email from env
+      to,
+      subject,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error; // Ensure errors are propagated
+  }
+};
+
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -78,12 +106,27 @@ app.post("/api/employeeregister", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           return res.status(500).send("Registration failed");
         }
-        res.status(201).send({ message: "Registration successful" });
+
+        // Send confirmation email
+        const mailOptions = {
+          from: 'thanusanraj49@gmail.com', // Sender's email
+          to: username, // Recipient's email (username is used as the email)
+          subject: 'Account Created Successfully - Leave managment',
+          text: `Hello ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nYou can log in to the system using this URL: https://lms-model.netlify.app/login\n\nThank you!\n\nRegards,\nLeave Management Team`,
+        };
+
+        try {
+          await transporter.sendMail(mailOptions);
+          res.status(201).send({ message: "Registration successful" });
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          return res.status(500).send("Registration successful, but failed to send confirmation email");
+        }
       }
     );
   } catch (error) {
@@ -198,7 +241,7 @@ app.post("/api/crmanager", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           // Check for specific database errors if needed
@@ -207,10 +250,25 @@ app.post("/api/crmanager", async (req, res) => {
           }
           return res.status(500).send("Registration failed");
         }
-        // Successfully created manager
-        return res
-          .status(201)
-          .send({ message: "Manager has been added successfully" });
+
+        // Send confirmation email
+        const mailOptions = {
+          from: 'thanusanraj49@gmail.com', // Sender's email
+          to: username, // Assuming username is the email
+          subject: 'Manager Account Created Successfully - Leave Management System',
+          text: `Hello ${name},\n\nYour manager account has been created successfully!\n\nUsername: ${username}\n\nYou can log in to the system using this URL: https://lms-model.netlify.app/login\n\nThank you!\n\nRegards,\nLeave Management Team`,
+        };
+
+        try {
+          await transporter.sendMail(mailOptions);
+          // Successfully created manager
+          return res
+            .status(201)
+            .send({ message: "Manager has been added successfully" });
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          return res.status(500).send("Manager created, but failed to send confirmation email");
+        }
       }
     );
   } catch (error) {
@@ -218,6 +276,7 @@ app.post("/api/crmanager", async (req, res) => {
     return res.status(500).send("Server error");
   }
 });
+
 
 app.get("/api/users", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {
@@ -738,33 +797,6 @@ app.get("/api/LeaveApply/", (req, res) => {
   );
 });
 
-const generateResetToken = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-const sendEmail = async (to, subject, text) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "Gmail", // Fetch service from env
-      auth: {
-        user: "rajthanusan08@gmail.com", // Fetch email user from env
-        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
-      },
-    });
-
-    const mailOptions = {
-      from: "thanusanraj49@gmail.com", // Fetch sender email from env
-      to,
-      subject,
-      text,
-    };
-
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw error; // Ensure errors are propagated
-  }
-};
 
 app.post("/api/request-password-reset", (req, res) => {
   const { email } = req.body;
