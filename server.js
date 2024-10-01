@@ -116,7 +116,7 @@ app.post("/api/employeeregister", async (req, res) => {
         if (result.affectedRows > 0) {
           // Prepare email content
           const emailSubject = "Registration Successful - Leave Management System";
-          const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+          const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nYou can log in using the following link: https://lms-model.netlify.app/login\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
 
           try {
             // Send confirmation email
@@ -244,7 +244,7 @@ app.post("/api/crmanager", async (req, res) => {
         birthday || null, // Use NULL if birthday is not provided
         joindate || null, // Use NULL if joindate is not provided
       ],
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           console.error("Registration failed:", err);
           // Check for specific database errors if needed
@@ -253,10 +253,23 @@ app.post("/api/crmanager", async (req, res) => {
           }
           return res.status(500).send("Registration failed");
         }
-        // Successfully created manager
-        return res
-          .status(201)
-          .send({ message: "Manager has been added successfully" });
+
+        if (result.affectedRows > 0) {
+          // Prepare email content
+          const emailSubject = "Manager Registration Successful - Leave Management System";
+          const emailText = `Dear ${name},\n\nYour account as a manager has been created successfully!\n\nUsername: ${username}\n\nYou can log in using the following link: https://lms-model.netlify.app/login\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+
+          try {
+            // Send confirmation email
+            await sendEmail(username, emailSubject, emailText); // Send email to the registered user's email
+            return res.status(201).send({ message: "Manager has been added successfully and confirmation email sent." });
+          } catch (emailError) {
+            console.error("Error sending email:", emailError);
+            return res.status(500).json({ success: false, message: "Manager added successfully, but failed to send confirmation email." });
+          }
+        } else {
+          return res.status(404).json({ success: false, message: "Registration failed, no rows affected." });
+        }
       }
     );
   } catch (error) {
@@ -264,6 +277,7 @@ app.post("/api/crmanager", async (req, res) => {
     return res.status(500).send("Server error");
   }
 });
+
 
 app.get("/api/users", (req, res) => {
   db.query("SELECT * FROM users", (err, results) => {
@@ -803,36 +817,19 @@ app.post("/api/request-password-reset", (req, res) => {
 
     if (results.affectedRows > 0) {
       try {
-        await sendEmail(
-         email,
-"Password Reset Request - Leave Management System",
-`Dear User,
-
-We have received a request to reset your password for your Leave Management System account.
-
-Your password reset code is: **${code}**.
-
-You can use the following link to log in with your updated password:https://lms-model.netlify.app/login.
-
-If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
-
-Thank you,  
-Leave Management System Team
-
-**Note:** This code will expire in 30 minutes.
-`
-
-        );
+        const emailSubject = "Password Reset Request - Leave Management System";
+        const emailText = `Dear User,\n\nWe have received a request to reset your password for your Leave Management System account.\n\nYour password reset code is: **${code}**.\n\nYou can use the following link to log in with your updated password: https://lms-model.netlify.app/login.\n\nIf you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.\n\nThank you,\nLeave Management System Team\n\n**Note:** This code will expire in 30 minutes.`;
+    
+        await sendEmail(email, emailSubject, emailText);
         res.json({ success: true });
       } catch (emailError) {
         console.error("Error sending email:", emailError);
-        res
-          .status(500)
-          .json({ success: false, message: "Error sending email" });
+        res.status(500).json({ success: false, message: "Error sending email" });
       }
     } else {
       res.status(404).json({ success: false, message: "Username not found" });
     }
+    
   });
 });
 
@@ -926,22 +923,11 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
           if (results.length === 0) {
             return res.status(404).json({ error: "User not found" });
           }
-
+          
           const employeeEmail = results[0].email; // Assuming username is the email
-          const subject = `Leave Request ${
-            action.charAt(0).toUpperCase() + action.slice(1)
-          }`;
-          const text = `Dear User,
-
-We would like to inform you that the status of your leave request has been updated.
+          const subject = `Leave Request ${action.charAt(0).toUpperCase() + action.slice(1)}`;
+          const text = `Dear User,\n\nWe would like to inform you that the status of your leave request has been updated.\n\nYour leave request has been ${action}. You can check the status by using the following link: https://lms-model.netlify.app/myleave.\n\nIf you have any questions or need further assistance, please do not hesitate to contact us.\n\nThank you,\nThe Leave Management System Team`;
           
-Your leave request has been ${action}. You can check the status by using the following link : https://lms-model.netlify.app/myleave.
-          
-If you have any questions or need further assistance, please do not hesitate to contact us.
-          
-Thank you,  
-The Leave Management System Team`;
-
           // Send email
           try {
             await sendEmail(employeeEmail, subject, text);
@@ -950,12 +936,11 @@ The Leave Management System Team`;
             });
           } catch (emailError) {
             console.error("Error sending email:", emailError);
-            res
-              .status(500)
-              .json({
-                error: "Leave request updated, but failed to send email",
-              });
+            res.status(500).json({
+              error: "Leave request updated, but failed to send email",
+            });
           }
+          
         }
       );
     }
