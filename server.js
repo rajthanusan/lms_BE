@@ -114,24 +114,6 @@ app.post("/api/employeeregister", async (req, res) => {
           return res.status(500).send("Registration failed");
         }
         res.status(201).send({ message: "Registration successful" });
-        const emailSubject = "Registration Successful - Leave Management System";
-        const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
-
-        try {
-          await sendEmail(username, emailSubject, emailText); // Send email to the registered user's email
-          res.status(201).send({ message: "Registration successful" });
-        } catch (emailError) {
-          console.error("Error sending email:", emailError);
-          return res
-            .status(500)
-            .json({ success: false, message: "Registration successful, but failed to send confirmation email" });
-        }
-      }
-    );
-  } catch (error) {
-    console.error("Error hashing password:", error);
-    res.status(500).send("Server error");
-  };
       }
     );
   } catch (error) {
