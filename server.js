@@ -116,21 +116,21 @@ app.post("/api/employeeregister", async (req, res) => {
         if (result.affectedRows > 0) {
           // Prepare email content
           const emailSubject = "Registration Successful - Leave Management System";
-          const emailText = `<html>
-            <body>
-              <p>Dear ${name},</p>
-              <p>Your account has been created successfully!</p>
-              <p>Username: <strong>${username}</strong></p>
-              <p>
-                You can log in using the following link: 
-                <a href="https://lms-model.netlify.app/login" style="color: black; text-decoration: none;">
-                  Leave Management System
-                </a>
-              </p>
-              <p>Thank you for registering with us.</p>
-              <p>Best Regards,<br>Leave Management System Team</p>
-            </body>
-          </html>`;
+          const emailText = ` <html>
+          <body>
+            <p style="color: black;">Dear ${name},</p>
+            <p style="color: black;">Your account has been created successfully!</p>
+            <p style="color: black;">Username: <strong>${username}</strong></p>
+            <p style="color: black;">
+              You can log in using the following link: 
+              <a href="https://lms-model.netlify.app/login">
+                Leave Management System
+              </a>
+            </p>
+            <p style="color: black;">Thank you for registering with us.</p>
+            <p style="color: black;">Best Regards,<br>Leave Management System Team</p>
+          </body>
+        </html>`;
 
           try {
             // Send confirmation email
@@ -831,9 +831,32 @@ app.post("/api/request-password-reset", (req, res) => {
     if (results.affectedRows > 0) {
       try {
         const emailSubject = "Password Reset Request - Leave Management System";
-        const emailText = `Dear User,\n\nWe have received a request to reset your password for your Leave Management System account.\n\nYour password reset code is: **${code}**.\n\nYou can use the following link to log in with your updated password: https://lms-model.netlify.app/login.\n\nIf you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.\n\nThank you,\nLeave Management System Team\n\n**Note:** This code will expire in 30 minutes.`;
+        const html = `
+          <html>
+            <body>
+              <p style="color: black;">Dear User,</p>
+              <p style="color: black;">
+                We have received a request to reset your password for your Leave Management System account.
+              </p>
+              <p style="color: black;">
+                Your password reset code is: <strong>${code}</strong>.
+              </p>
+              <p style="color: black;">
+                You can use the following link to log in with your updated password: 
+                <a href="https://lms-model.netlify.app/login">
+                  Login to Leave Management System
+                </a>.
+              </p>
+              <p style="color: black;">
+                If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
+              </p>
+              <p style="color: black;">Thank you,<br>The Leave Management System Team</p>
+              <p style="color: black;"><strong>Note:</strong> This code will expire in 30 minutes.</p>
+            </body>
+          </html>
+        `;
     
-        await sendEmail(email, emailSubject, emailText);
+        await sendEmail(email, emailSubject, html); // Send email using the html content
         res.json({ success: true });
       } catch (emailError) {
         console.error("Error sending email:", emailError);
@@ -939,11 +962,29 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
           
           const employeeEmail = results[0].email; // Assuming username is the email
           const subject = `Leave Request ${action.charAt(0).toUpperCase() + action.slice(1)}`;
-          const text = `Dear User,\n\nWe would like to inform you that the status of your leave request has been updated.\n\nYour leave request has been ${action}. You can check the status by using the following link: https://lms-model.netlify.app/myleave.\n\nIf you have any questions or need further assistance, please do not hesitate to contact us.\n\nThank you,\nThe Leave Management System Team`;
+          const html = `
+            <html>
+              <body>
+                <p style="color: black;">Dear User,</p>
+                <p style="color: black;">
+                  We would like to inform you that the status of your leave request has been updated.
+                </p>
+                <p style="color: black;">
+                  Your leave request has been <strong>${action}</strong>. You can check the status by using the following link: 
+                  <a href="https://lms-model.netlify.app/myleave">
+                    My Leave Status
+                  </a>.
+                </p>
+                <p style="color: black;">
+                  If you have any questions or need further assistance, please do not hesitate to contact us.
+                </p>
+                <p style="color: black;">Thank you,<br>The Leave Management System Team</p>
+              </body>
+            </html>
+          `;
           
-          // Send email
           try {
-            await sendEmail(employeeEmail, subject, text);
+            await sendEmail(employeeEmail, subject, html);
             res.json({
               message: "Leave request updated successfully and email sent",
             });
