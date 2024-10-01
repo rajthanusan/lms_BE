@@ -39,13 +39,12 @@ const comparePassword = async (password, hashedPassword) => {
   // Compare the password with the hashed password
   return await bcrypt.compare(password, hashedPassword);
 };
-
-
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString("hex");
 };
 
-const sendEmail = async (to, subject, html) => {
+// Function to send email
+const sendEmail = async (to, subject, html) => { // Changed 'text' to 'html'
   try {
     const transporter = nodemailer.createTransport({
       service: "Gmail", // Fetch service from env
@@ -59,7 +58,7 @@ const sendEmail = async (to, subject, html) => {
       from: "thanusanraj49@gmail.com", // Fetch sender email from env
       to,
       subject,
-      text,
+      html, // Use html instead of text
     };
 
     await transporter.sendMail(mailOptions);
@@ -69,6 +68,7 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
+// Registration endpoint
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -131,7 +131,6 @@ app.post("/api/employeeregister", async (req, res) => {
               <p>Best Regards,<br>Leave Management System Team</p>
             </body>
           </html>`;
-        
 
           try {
             // Send confirmation email
@@ -151,7 +150,6 @@ app.post("/api/employeeregister", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
-
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
