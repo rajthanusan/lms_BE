@@ -128,7 +128,7 @@ app.post("/api/employeeregister", async (req, res) => {
               </a>
             </p>
             <p style="color: black;">Thank you for registering with us.</p>
-            <p style="color: black;">Best Regards,<br>Leave Management System Team</p>
+            <p style="color: black;">Best Regards,<br>Leave Management System Team.</p>
           </body>
         </html>`;
 
@@ -269,8 +269,23 @@ app.post("/api/crmanager", async (req, res) => {
 
         if (result.affectedRows > 0) {
           // Prepare email content
-          const emailSubject = "Manager Registration Successful - Leave Management System";
-          const emailText = `Dear ${name},\n\nYour account as a manager has been created successfully!\n\nUsername: ${username}\n\nYou can log in using the following link: https://lms-model.netlify.app/login\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+          const emailSubject = "Registration Successful - Leave Management System";
+          const emailText = ` <html>
+          <body>
+            <p style="color: black;">Dear ${name},</p>
+            <p style="color: black;">Your account has been created successfully!</p>
+            <p style="color: black;">Username: <strong>${username}</strong></p>
+            <p style="color: black;">
+              You can log in using the following link: 
+              <a href="https://lms-model.netlify.app/login">
+                Leave Management System
+              </a>
+            </p>
+            <p style="color: black;">Thank you for registering with us.</p>
+            <p style="color: black;">Best Regards,<br>Leave Management System Team<./p>
+          </body>
+        </html>`;
+
 
           try {
             // Send confirmation email
@@ -850,7 +865,7 @@ app.post("/api/request-password-reset", (req, res) => {
               <p style="color: black;">
                 If you did not request a password reset, please disregard this email. If you have any concerns, feel free to contact our support team.
               </p>
-              <p style="color: black;">Thank you,<br>The Leave Management System Team</p>
+              <p style="color: black;">Thank you,<br>The Leave Management System Team.</p>
               <p style="color: black;"><strong>Note:</strong> This code will expire in 30 minutes.</p>
             </body>
           </html>
@@ -965,7 +980,7 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
           const html = `
             <html>
               <body>
-                <p style="color: black;">Dear User,</p>
+                <p style="color: black;">Dear Employee,</p>
                 <p style="color: black;">
                   We would like to inform you that the status of your leave request has been updated.
                 </p>
@@ -978,7 +993,7 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
                 <p style="color: black;">
                   If you have any questions or need further assistance, please do not hesitate to contact us.
                 </p>
-                <p style="color: black;">Thank you,<br>The Leave Management System Team</p>
+                <p style="color: black;">Thank you,<br>The Leave Management System Team.</p>
               </body>
             </html>
           `;
