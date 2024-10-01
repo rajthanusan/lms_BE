@@ -116,7 +116,18 @@ app.post("/api/employeeregister", async (req, res) => {
         if (result.affectedRows > 0) {
           // Prepare email content
           const emailSubject = "Registration Successful - Leave Management System";
-          const emailText = `Dear ${name},\n\nYour account has been created successfully!\n\nUsername: ${username}\n\nYou can log in using the following link: https://lms-model.netlify.app/login\n\nThank you for registering with us.\n\nBest Regards,\nLeave Management System Team`;
+          const emailText = `
+          <html>
+            <body>
+              <p>Dear ${name},</p>
+              <p>Your account has been created successfully!</p>
+              <p>Username: <strong>${username}</strong></p>
+              <p>You can log in using the following link: <a href="https://lms-model.netlify.app/login" style="color: black; text-decoration: none;">Leave managment system</a></p>
+              <p>Thank you for registering with us.</p>
+              <p>Best Regards,<br>Leave Management System Team</p>
+            </body>
+          </html>
+        `;
 
           try {
             // Send confirmation email
