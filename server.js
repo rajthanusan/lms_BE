@@ -40,36 +40,6 @@ const comparePassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
 };
 
-
-const generateResetToken = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-const sendEmail = async (to, subject, text) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "Gmail", // Fetch service from env
-      auth: {
-        user: "rajthanusan08@gmail.com", // Fetch email user from env
-        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
-      },
-    });
-
-    const mailOptions = {
-      from: "thanusanraj49@gmail.com", // Fetch sender email from env
-      to,
-      subject,
-      text,
-    };
-
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw error; // Ensure errors are propagated
-  }
-};
-
-
 app.post("/api/employeeregister", async (req, res) => {
   const {
     username,
@@ -767,6 +737,34 @@ app.get("/api/LeaveApply/", (req, res) => {
     }
   );
 });
+
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+const sendEmail = async (to, subject, text) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "Gmail", // Fetch service from env
+      auth: {
+        user: "rajthanusan08@gmail.com", // Fetch email user from env
+        pass: "gjfi fuas wekw lmwd", // Fetch email password from env
+      },
+    });
+
+    const mailOptions = {
+      from: "thanusanraj49@gmail.com", // Fetch sender email from env
+      to,
+      subject,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error; // Ensure errors are propagated
+  }
+};
 
 app.post("/api/request-password-reset", (req, res) => {
   const { email } = req.body;
