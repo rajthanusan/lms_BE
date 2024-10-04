@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -1014,6 +1016,63 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
       );
     }
   );
+});
+
+
+// Create a new instance of the WhatsApp client
+const whatsappClient = new Client({
+  authStrategy: new LocalAuth()
+});
+
+// Listen for QR code and store it in the MySQL database
+whatsappClient.on('qr', (qr) => {
+  qrcode.generate(qr, { small: true });  // Generate QR in terminal
+  console.log("QR code generated, store it in the database");
+
+  // Save QR code and status in MySQL
+  db.query('INSERT INTO whatsapp_connection (status, qr_code) VALUES (?, ?)', ['PENDING', qr], (err, result) => {
+      if (err) throw err;
+      console.log("QR code saved in database");
+  });
+});
+
+// Notify when the WhatsApp client is ready
+whatsappClient.on('ready', () => {
+  console.log("WhatsApp Client is ready!");
+
+  // Update connection status to 'CONNECTED' in MySQL
+  db.query('UPDATE whatsapp_connection SET status = ?, qr_code = NULL WHERE status = ?', ['CONNECTED', 'PENDING'], (err, result) => {
+      if (err) throw err;
+      console.log("WhatsApp connection status updated to 'CONNECTED'");
+  });
+});
+
+// Initialize the WhatsApp client
+whatsappClient.initialize();
+
+// API to check connection status and QR code
+app.get('/api/whatsapp/status', (req, res) => {
+  db.query('SELECT status, qr_code FROM whatsapp_connection ORDER BY id DESC LIMIT 1', (err, result) => {
+      if (err) return res.status(500).send("Error fetching WhatsApp status");
+      res.json(result[0]);
+  });
+});
+
+// API to send a WhatsApp message to a specific number
+app.post('/api/whatsapp/send-message', async (req, res) => {
+  const { number, message } = req.body;
+
+  if (!number || !message) {
+      return res.status(400).send("Please provide both a number and a message.");
+  }
+
+  try {
+      const formattedNumber = `${number}@c.us`;  // WhatsApp number format (country code + number)
+      await whatsappClient.sendMessage(formattedNumber, message);
+      res.status(200).send(`Message sent to ${number}`);
+  } catch (error) {
+      res.status(500).send("Error sending message: " + error.message);
+  }
 });
 
 const port = process.env.PORT || 8085; // Use the PORT from the environment or default to 8085 locally
