@@ -222,11 +222,11 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Google login endpoint
-
 app.post('/api/google-login', async (req, res) => {
   const { token } = req.body;
 
   try {
+      // Verify the Google token
       const ticket = await client.verifyIdToken({
           idToken: token,
           audience: process.env.GOOGLE_CLIENT_ID,
@@ -235,34 +235,39 @@ app.post('/api/google-login', async (req, res) => {
       const payload = ticket.getPayload();
       const { email } = payload; // Get the email from Google
 
-      // Check if the email exists in the 'username' field of the 'user' table
+      // Check if the email exists in the 'username' field of the 'users' table
       db.query('SELECT * FROM users WHERE username = ?', [email], (error, results) => {
           if (error) {
+              console.error("Database query error:", error);
               return res.status(500).json({ message: 'Internal server error' });
           }
 
           if (results.length > 0) {
               const user = results[0];
-              
-              // You can use a session or JWT here to log the user in
-              // For example:
-              req.session.user = user; // Assuming you are using express-session
+
+              // Use the session to log the user in
+              req.session.user = {
+                  username: user.username,
+                  role: user.role,
+                  // Add other user data as needed
+              };
 
               return res.status(200).json({
-                  message: 'BE : Login successful',
+                  message: 'Login successful',
                   userData: {
                       username: user.username,
                       role: user.role,
-                      // Add other user data as needed
+                      // Include other user data if necessary
                   },
               });
           } else {
-              return res.status(401).json({ message: 'BE : User not found. Please register first.' });
+              // User not found
+              return res.status(401).json({ message: 'User not found. Please register first.' });
           }
       });
   } catch (error) {
-      console.error("BE : Google login failed:", error);
-      return res.status(500).json({ message: 'BE : Google login failed.' });
+      console.error("Google login failed:", error);
+      return res.status(500).json({ message: 'Google login failed.' });
   }
 });
 
