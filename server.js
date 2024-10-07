@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { OAuth2Client } = require('google-auth-library');
 
+
 dotenv.config(); // Load environment variables from .env file
 
 const app = express();
@@ -221,59 +222,40 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Google login endpoint
-app.post('/api/auth/google', async (req, res) => {
-  const { token } = req.body; // Get the Google token from the request body
 
-  // Validate token presence
-  if (!token) {
-    return res.status(400).json({ message: 'Token is required' });
-  }
 
-  try {
-    // Verify the Google token
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+app.post('/api/google-login', async (req, res) => {
+    const { token } = req.body;
 
-    const payload = ticket.getPayload();
-    const { email } = payload; // Get the email from the payload
-
-    // Query to find the user in the database by email
-    db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
-      if (err) {
-        console.error('Google login failed:', err);
-        return res.status(500).json({ message: 'Login failed due to server error' });
-      }
-
-      // Check if user exists
-      if (result.length > 0) {
-        // Successful login
-        const user = result[0];
-        return res.json({
-          message: 'Login successful',
-          userData: {
-            userId: user.id,
-            username: user.username,
-            role: user.role,
-            name: user.name,
-            additionalData: {
-              department: user.department || null,
-              contact: user.contact || null,
-            },
-          },
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
-      } else {
-        // User does not exist, optionally create a new user
-        // For example, you could return an appropriate message or create a new user
-        return res.status(401).json({ message: 'User not found. Please register first.' });
-      }
-    });
-  } catch (error) {
-    console.error('Google login failed:', error);
-    return res.status(401).json({ message: 'Google login failed' });
-  }
+
+        const payload = ticket.getPayload();
+        const { email } = payload; // Get the email from Google
+
+        // Check if the email exists in the 'username' field of the 'user' table
+        db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
+            if (err) {
+                console.error('Google login failed:', err);
+                return res.status(500).send('Login failed');
+            }
+            if (result.length > 0) {
+                // User exists, login successful
+                res.send({ message: 'Login successful', userId: result[0].id });
+            } else {
+                // User not found
+                res.status(401).send('Login failed: User not found');
+            }
+        });
+    } catch (error) {
+        console.error('Google login failed:', error);
+        res.status(401).send('Google login failed');
+    }
 });
+
 
 
 app.post("/api/crmanager", async (req, res) => {
