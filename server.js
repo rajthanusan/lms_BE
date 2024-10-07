@@ -223,39 +223,48 @@ app.post("/api/login", async (req, res) => {
 
 // Google login endpoint
 
-
 app.post('/api/google-login', async (req, res) => {
-    const { token } = req.body;
+  const { token } = req.body;
 
-    try {
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+  try {
+      const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: process.env.GOOGLE_CLIENT_ID,
+      });
 
-        const payload = ticket.getPayload();
-        const { email } = payload; // Get the email from Google
+      const payload = ticket.getPayload();
+      const { email } = payload; // Get the email from Google
 
-        // Check if the email exists in the 'username' field of the 'user' table
-        db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
-            if (err) {
-                console.error('Google login failed:', err);
-                return res.status(500).send('Login failed');
-            }
-            if (result.length > 0) {
-                // User exists, login successful
-                res.send({ message: 'Login successful', userId: result[0].id });
-            } else {
-                // User not found
-                res.status(401).send('Login failed: User not found');
-            }
-        });
-    } catch (error) {
-        console.error('Google login failed:', error);
-        res.status(401).send('Google login failed');
-    }
+      // Check if the email exists in the 'username' field of the 'user' table
+      db.query('SELECT * FROM users WHERE username = ?', [email], (error, results) => {
+          if (error) {
+              return res.status(500).json({ message: 'Internal server error' });
+          }
+
+          if (results.length > 0) {
+              const user = results[0];
+              
+              // You can use a session or JWT here to log the user in
+              // For example:
+              req.session.user = user; // Assuming you are using express-session
+
+              return res.status(200).json({
+                  message: 'BE : Login successful',
+                  userData: {
+                      username: user.username,
+                      role: user.role,
+                      // Add other user data as needed
+                  },
+              });
+          } else {
+              return res.status(401).json({ message: 'BE : User not found. Please register first.' });
+          }
+      });
+  } catch (error) {
+      console.error("BE : Google login failed:", error);
+      return res.status(500).json({ message: 'BE : Google login failed.' });
+  }
 });
-
 
 
 app.post("/api/crmanager", async (req, res) => {
