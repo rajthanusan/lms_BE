@@ -222,44 +222,52 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Google login endpoint
-app.post('/api/google-login', async (req, res) => {
+app.post("/api/google-login", async (req, res) => {
   const { token } = req.body;
 
   try {
-      // Verify the Google ID token
-      const ticket = await client.verifyIdToken({
-          idToken: token,
-          audience: process.env.GOOGLE_CLIENT_ID,
-      });
+    // Verify the Google ID token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-      const payload = ticket.getPayload();
-      const { email } = payload;
+    const payload = ticket.getPayload();
+    const { email } = payload;
 
-      // Check if the user already exists in the database
-      db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
-          if (err) {
-              console.error('Database query failed:', err);
-              return res.status(500).send({ message: 'Internal server error', error: err.message });
-          }
-          
-          if (result.length > 0) {
-              // User exists, login successful
-              const user = result[0];
-              return res.send({ 
-                  message: 'Login successful', 
-                  userId: user.id,
-                  role: user.role // Include role in the response
-              });
-          } else {
-              // User not found
-              return res.status(404).send({ message: 'User not found' });
-          }
-      });
+    // Check if the user already exists in the database
+    db.query("SELECT * FROM users WHERE username = ?", [email], (err, result) => {
+      if (err) {
+        console.error("Database query failed:", err);
+        return res.status(500).send({ message: "Internal server error", error: err.message });
+      }
+      
+      if (result.length > 0) {
+        // User exists, login successful
+        const user = result[0];
+        return res.send({
+          message: "Login successful",
+          userData: {
+            username: user.username,
+            role: user.role,
+            name: user.name,
+            additionalData: {
+              department: user.department || null,
+              contact: user.contact || null,
+            },
+          },
+        });
+      } else {
+        // User not found
+        return res.status(404).send({ message: "User not found" });
+      }
+    });
   } catch (error) {
-      console.error('Google login failed:', error);
-      return res.status(401).send({ message: 'Google login failed', error: error.message });
+    console.error("Google login failed:", error);
+    return res.status(401).send({ message: "Google login failed", error: error.message });
   }
 });
+
 
 
 
