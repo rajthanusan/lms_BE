@@ -221,56 +221,57 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Google login endpoint
-app.post('/api/google-login', async (req, res) => {
+app.post('/api/auth/google', async (req, res) => {
   const { token } = req.body; // Get the Google token from the request body
 
   // Validate token presence
   if (!token) {
-      return res.status(400).json({ message: 'Token is required' });
+    return res.status(400).json({ message: 'Token is required' });
   }
 
   try {
-      // Verify the Google token
-      const ticket = await client.verifyIdToken({
-          idToken: token,
-          audience: process.env.GOOGLE_CLIENT_ID,
-      });
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-      const payload = ticket.getPayload();
-      const { email } = payload; // Get the email from the payload
+    const payload = ticket.getPayload();
+    const { email } = payload; // Get the email from the payload
 
-      // Query to find the user in the database by email
-      db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
-          if (err) {
-              console.error('Google login failed:', err);
-              return res.status(500).json({ message: 'Login failed due to server error' });
-          }
+    // Query to find the user in the database by email
+    db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
+      if (err) {
+        console.error('Google login failed:', err);
+        return res.status(500).json({ message: 'Login failed due to server error' });
+      }
 
-          // Check if user exists
-          if (result.length > 0) {
-              // Successful login
-              const user = result[0];
-              return res.json({
-                  message: 'Login successful',
-                  userData: {
-                      userId: user.id,
-                      username: user.username,
-                      role: user.role,
-                      name: user.name,
-                      additionalData: {
-                          department: user.department || null,
-                          contact: user.contact || null,
-                      },
-                  },
-              });
-          } else {
-              // User does not exist
-              return res.status(401).json({ message: 'User not found. Please register first.' });
-          }
-      });
+      // Check if user exists
+      if (result.length > 0) {
+        // Successful login
+        const user = result[0];
+        return res.json({
+          message: 'Login successful',
+          userData: {
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+            name: user.name,
+            additionalData: {
+              department: user.department || null,
+              contact: user.contact || null,
+            },
+          },
+        });
+      } else {
+        // User does not exist, optionally create a new user
+        // For example, you could return an appropriate message or create a new user
+        return res.status(401).json({ message: 'User not found. Please register first.' });
+      }
+    });
   } catch (error) {
-      console.error('Google login failed:', error);
-      return res.status(401).json({ message: 'Google login failed' });
+    console.error('Google login failed:', error);
+    return res.status(401).json({ message: 'Google login failed' });
   }
 });
 
