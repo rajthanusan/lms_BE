@@ -222,20 +222,27 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Google login endpoint
+app.use(cors({
+  origin: "http://localhost:3000/login", // Replace with your frontend URL
+  credentials: true, // If you're sending cookies or authentication info
+}));
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// Define your routes
 app.post('/api/google-login', async (req, res) => {
   const { token } = req.body;
 
   try {
-      // Verify the Google token
       const ticket = await client.verifyIdToken({
           idToken: token,
           audience: process.env.GOOGLE_CLIENT_ID,
       });
 
       const payload = ticket.getPayload();
-      const { email } = payload; // Get the email from Google
+      const { email } = payload;
 
-      // Check if the email exists in the 'username' field of the 'users' table
       db.query('SELECT * FROM users WHERE username = ?', [email], (error, results) => {
           if (error) {
               console.error("Database query error:", error);
@@ -244,12 +251,9 @@ app.post('/api/google-login', async (req, res) => {
 
           if (results.length > 0) {
               const user = results[0];
-
-              // Use the session to log the user in
               req.session.user = {
                   username: user.username,
                   role: user.role,
-                  // Add other user data as needed
               };
 
               return res.status(200).json({
@@ -257,11 +261,9 @@ app.post('/api/google-login', async (req, res) => {
                   userData: {
                       username: user.username,
                       role: user.role,
-                      // Include other user data if necessary
                   },
               });
           } else {
-              // User not found
               return res.status(401).json({ message: 'User not found. Please register first.' });
           }
       });
