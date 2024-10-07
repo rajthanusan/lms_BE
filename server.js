@@ -238,23 +238,24 @@ app.post('/api/google-login', async (req, res) => {
       // Check if the user already exists in the database
       db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
           if (err) {
-              console.error('Google login failed:', err);
-              return res.status(500).send('Internal server error');
+              console.error('Database query failed:', err); // Log detailed error
+              return res.status(500).send({ message: 'Internal server error', error: err.message });
           }
           
           if (result.length > 0) {
               // User exists, login successful
               return res.send({ message: 'Login successful', userId: result[0].id });
           } else {
-              // User not found, return an appropriate response
+              // User not found
               return res.status(404).send({ message: 'User not found' });
           }
       });
   } catch (error) {
-      console.error('Google login failed:', error);
-      return res.status(401).send('Google login failed');
+      console.error('Google login failed:', error); // Log the error
+      return res.status(401).send({ message: 'Google login failed', error: error.message });
   }
 });
+
 
 
 
