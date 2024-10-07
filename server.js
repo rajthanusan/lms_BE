@@ -223,12 +223,6 @@ app.post("/api/login", async (req, res) => {
 
 // Google login endpoint
 app.post('/api/google-login', async (req, res) => {
-  db.ping((err) => {
-    if (err) {
-        console.error('Database connection error:', err);
-        return res.status(500).send({ message: 'Database connection error' });
-    }
-});
   const { token } = req.body;
 
   try {
