@@ -226,6 +226,8 @@ app.post('/api/google-login', async (req, res) => {
   const { token } = req.body;
 
   try {
+      console.log("Received token:", token); // Log the received token
+
       // Verify the Google ID token
       const ticket = await client.verifyIdToken({
           idToken: token,
@@ -238,7 +240,7 @@ app.post('/api/google-login', async (req, res) => {
       // Check if the user already exists in the database
       db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
           if (err) {
-              console.error('Database query failed:', err); // Log detailed error
+              console.error('Database query failed:', err); // Log database query error
               return res.status(500).send({ message: 'Internal server error', error: err.message });
           }
           
@@ -251,11 +253,10 @@ app.post('/api/google-login', async (req, res) => {
           }
       });
   } catch (error) {
-      console.error('Google login failed:', error); // Log the error
+      console.error('Google login failed:', error); // Log verification error
       return res.status(401).send({ message: 'Google login failed', error: error.message });
   }
 });
-
 
 
 
