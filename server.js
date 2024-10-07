@@ -236,7 +236,7 @@ app.post('/api/google-login', async (req, res) => {
       const { sub: googleId, email } = payload;
 
       // Check if the user already exists in the database
-      db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
+      db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
           if (err) {
               console.error('Database query failed:', err); // Log detailed error
               return res.status(500).send({ message: 'Internal server error', error: err.message });
