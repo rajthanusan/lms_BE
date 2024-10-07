@@ -244,7 +244,12 @@ app.post('/api/google-login', async (req, res) => {
           
           if (result.length > 0) {
               // User exists, login successful
-              return res.send({ message: 'Login successful', userId: result[0].id });
+              const user = result[0];
+              return res.send({ 
+                  message: 'Login successful', 
+                  userId: user.id,
+                  role: user.role // Include role in the response
+              });
           } else {
               // User not found
               return res.status(404).send({ message: 'User not found' });
@@ -255,6 +260,7 @@ app.post('/api/google-login', async (req, res) => {
       return res.status(401).send({ message: 'Google login failed', error: error.message });
   }
 });
+
 
 
 
