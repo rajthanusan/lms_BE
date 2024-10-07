@@ -240,7 +240,7 @@ app.post('/api/auth/google', async (req, res) => {
     const { email } = payload; // Get the email from the payload
 
     // Query to find the user in the database by email
-    db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
+    db.query('SELECT * FROM users WHERE username = ?', [email], (err, result) => {
       if (err) {
         console.error('Google login failed:', err);
         return res.status(500).json({ message: 'Login failed due to server error' });
