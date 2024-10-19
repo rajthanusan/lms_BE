@@ -913,7 +913,7 @@ app.post("/api/request-password-reset", (req, res) => {
               </p>
               <p style="color: black;">
                 You can use the following link to log in with your updated password: 
-                <a href="https://lms-model.netlify.app/login">
+                <a href="https://lms-vii.netlify.app/login">
                   Login to Leave Management System
                 </a>.
               </p>
@@ -1041,7 +1041,7 @@ app.put("/api/LeaveApply/:id/:action", (req, res) => {
                 </p>
                 <p style="color: black;">
                   Your leave request has been <strong>${action}</strong>. You can check the status by using the following link: 
-                  <a href="https://lms-model.netlify.app/myleave">
+                  <a href="https://lms-vii.netlify.app/myleave">
                     My Leave Status
                   </a>.
                 </p>
