@@ -268,7 +268,51 @@ app.post("/api/google-login", async (req, res) => {
   }
 });
 
+app.get("/api/AllDepartment", (req, res) => {
+  const sql = "SELECT * FROM department"; // Retrieve distinct departments
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(results.map((row) => row.department_name)); // Send department names
+  });
+});
 
+/*
+app.get('/api/Department', (req, res) => {
+    const sql = 'SELECT * FROM manager';
+    db.query(sql, (err, results) => {
+        if (err) throw err;
+        res.json(results);
+    });
+});*/
+
+/// Get all departments
+app.get("/api/Department", (req, res) => {
+  const sql = "SELECT * FROM department"; // Adjusted to select from the correct table
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching departments:", err);
+      return res.status(500).send("Error fetching departments");
+    }
+    res.json(results);
+  });
+});
+
+// Get department by ID
+app.get("/api/Department/:id", (req, res) => {
+  const sql = "SELECT * FROM department WHERE id = ?"; // Adjusted to select from the correct table
+  db.query(sql, [req.params.id], (err, result) => {
+    if (err) {
+      console.error("Error fetching department by ID:", err);
+      return res.status(500).send("Error fetching department");
+    }
+    if (result.length === 0) {
+      return res.status(404).send("Department not found");
+    }
+    res.json(result[0]);
+  });
+});
 
 
 
@@ -668,51 +712,7 @@ app.get("/api/Leavetype/:id", (req, res) => {
   });
 });
 
-app.get("/api/AllDepartment", (req, res) => {
-  const sql = "SELECT * FROM department"; // Retrieve distinct departments
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json(results.map((row) => row.department_name)); // Send department names
-  });
-});
 
-/*
-app.get('/api/Department', (req, res) => {
-    const sql = 'SELECT * FROM manager';
-    db.query(sql, (err, results) => {
-        if (err) throw err;
-        res.json(results);
-    });
-});*/
-
-/// Get all departments
-app.get("/api/Department", (req, res) => {
-  const sql = "SELECT * FROM department"; // Adjusted to select from the correct table
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching departments:", err);
-      return res.status(500).send("Error fetching departments");
-    }
-    res.json(results);
-  });
-});
-
-// Get department by ID
-app.get("/api/Department/:id", (req, res) => {
-  const sql = "SELECT * FROM department WHERE id = ?"; // Adjusted to select from the correct table
-  db.query(sql, [req.params.id], (err, result) => {
-    if (err) {
-      console.error("Error fetching department by ID:", err);
-      return res.status(500).send("Error fetching department");
-    }
-    if (result.length === 0) {
-      return res.status(404).send("Department not found");
-    }
-    res.json(result[0]);
-  });
-});
 
 // Create a new department
 app.post("/api/department", async (req, res) => {
