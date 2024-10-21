@@ -72,6 +72,16 @@ const sendEmail = async (to, subject, html) => { // Changed 'text' to 'html'
   }
 };
 
+app.get("/api/AllDepartment", (req, res) => {
+  const sql = "SELECT * FROM department"; // Retrieve distinct departments
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(results.map((row) => row.department_name)); // Send department names
+  });
+});
+
 // Registration endpoint
 app.post("/api/employeeregister", async (req, res) => {
   const {
@@ -268,15 +278,7 @@ app.post("/api/google-login", async (req, res) => {
   }
 });
 
-app.get("/api/AllDepartment", (req, res) => {
-  const sql = "SELECT * FROM department"; // Retrieve distinct departments
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json(results.map((row) => row.department_name)); // Send department names
-  });
-});
+
 
 /*
 app.get('/api/Department', (req, res) => {
